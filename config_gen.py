@@ -28,6 +28,7 @@ def main():
     parser.add_argument("-M", "--make-flags", help="Flags to pass to make when fake-building. Default: -M=\"{}\"".format(" ".join(default_make_flags)))
     parser.add_argument("-o", "--output", help="Save the config file as OUTPUT instead of .ycm_extra_conf.py.")
     parser.add_argument("--out-of-tree", action="store_true", help="Build autotools projects out-of-tree. This is a no-op for other project types.")
+    parser.add_argument("-e", "--environment", help="Comma separated list of environment variables to pass to build process.")
     parser.add_argument("PROJECT_DIR", help="The root directory of the project.")
     args = vars(parser.parse_args())
     project_dir = os.path.abspath(args["PROJECT_DIR"])
@@ -83,7 +84,7 @@ def main():
     os.remove(build_log_path)
 
 
-def fake_build(project_dir, build_log_path, verbose, make_cmd, compiler_cmd, out_of_tree, configure_opts, make_flags):
+def fake_build(project_dir, build_log_path, verbose, make_cmd, compiler_cmd, out_of_tree, configure_opts, make_flags, environment):
     '''Builds the project using the fake toolchain, to collect the compiler flags.
 
     project_dir: the directory containing the source files
@@ -115,6 +116,12 @@ def fake_build(project_dir, build_log_path, verbose, make_cmd, compiler_cmd, out
         "CXX" : "clang",
         "YCM_CONFIG_GEN_LOG" : build_log_path,
     }
+    if environment != None:
+        for var in environment.split(","):
+            try:
+                env[var] = os.environ[var]
+            except KeyError:
+                pass
     # used during configuration stage, so that cmake, etc. can verify what the compiler supports
     env_config = env.copy()
     env_config["YCM_CONFIG_GEN_CLANG_PASSTHROUGH"] = compiler_cmd
